@@ -1,25 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:untitled/Containers/CustomContainer.dart';
 import 'package:untitled/ThirdScreen.dart';
-import 'ThirdScreen.dart';
+import 'package:untitled/Widgets/CustomTextFormField.dart';
+import 'dart:convert';
+import 'package:untitled/Models/TaskModel.dart';
 
 class secondscreen extends StatefulWidget {
   const secondscreen({super.key});
 
+
   @override
   State<secondscreen> createState() => _secondscreen();
+
 }
 
 class _secondscreen extends State<secondscreen> {
   String? name = "Guest";
-  late bool isDone=true;
+  List<TaskModel> tasksList = [];
+
 
   @override
   void initState() {
     super.initState();
     loadName();
+    loadTask();
   }
 
   loadName() async {
@@ -27,7 +32,22 @@ class _secondscreen extends State<secondscreen> {
     name = sharedPreferences.getString("name") ?? "Guest";
     setState(() {});
   }
+  loadTask()async{
+    final prefs = await SharedPreferences.getInstance();
+    final tasks = prefs.getString("tasks");
 
+    if (tasks != null) {
+      final decoded = jsonDecode(tasks);
+
+      final taskList = List.from(
+        decoded,
+      ).map((e) => TaskModel.fromJson(e)).toList();
+
+      setState(() {
+        tasksList = taskList;
+      });
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(resizeToAvoidBottomInset:true,
@@ -67,32 +87,87 @@ class _secondscreen extends State<secondscreen> {
                      almost done ! 👋 """,style: GoogleFonts.plusJakartaSans(color: Colors.black,fontSize: 32,
                 fontWeight: FontWeight.w400)),
           SizedBox(height:40),
-          TaskItem(title:'Finish video in flutter Courses', subtitle:'',isDone: true ),
-            TaskItem(title:'Finish video in flutter Courses', subtitle:'', isDone: true ),
-            TaskItem(title:'Finish video in flutter Courses', subtitle:'', isDone: true ),
-         /* InkWell(
-            onTap:onTapdetails,
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(50),
-                border: Border.all(color: Colors.black26),
-              ),
-              child: const Icon(Icons.arrow_outward, size: 18),
+          Row(mainAxisAlignment: MainAxisAlignment.start,children: [
+          Expanded(
+              child: tasksList.isEmpty
+                  ? Center(
+                child: Text(
+                  "No Tasks Yet\nClick Add Task",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    color: Colors.grey,
+                    fontSize: 16,
+                  ),
+                ),
+              )
+                  : ListView.builder(
+                  itemCount: tasksList.length,
+                  itemBuilder: (context, index) {
+                    final task = tasksList[index];
 
-            ))*/SizedBox(height: 400),
-            Row(mainAxisAlignment: MainAxisAlignment.end,children: [
+                    return Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+
+                        decoration: BoxDecoration(
+                          color: const Color(0xff1E293B),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+
+                        child: ListTile(
+                            leading: Container(
+                              width: 45,
+                              height: 45,
+                              decoration: BoxDecoration(
+                                color: const Color(
+                                  0xff15B86C,
+                                ).withOpacity(.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.check,
+                                color: Color(0xff15B86C),
+                              ),
+                            ),
+
+                            title: Text(
+                              task.task,
+                              style: GoogleFonts.poppins(
+                                decoration: TextDecoration.lineThrough,
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+
+                            subtitle: Text(
+                              task.desc,
+                              style: GoogleFonts.poppins(color: Colors.grey),
+                            ),),
+                    );
+                  },
+              ))]),
+   SizedBox(height:40),
           FloatingActionButton.extended(
-            onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ThirdScreen()),
-          );},
+              elevation: 8,
+              onPressed: () {
+              Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ThirdScreen()),
+              ).then((_) => loadTask());
+              },
             backgroundColor:Color( 0xff15B86C),
             icon: Icon(Icons.add,color: Colors.white),
             label: Text("Add New Task",style: GoogleFonts.poppins(color: Colors.white,fontWeight: FontWeight.w500,fontSize: 16),),
-         )] )])
-      )),
+         )]
+      ))
+      ),
     );
   }
 }

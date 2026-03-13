@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:untitled/Models/TaskModel.dart';
 import 'package:untitled/Widgets/CustomTextFormField.dart';
+import 'package:untitled/Models/TaskModel.dart';
 class ThirdScreen extends StatefulWidget{
   @override
    const ThirdScreen({super.key});
@@ -55,23 +57,22 @@ Widget build(BuildContext Context)
        if(formkey.currentState!.validate())
          {
          final prefs = await SharedPreferences.getInstance();
+         final model = TaskModel(
+           task: taskcontroller.text,
+           desc: descriptionController.text,
+         );
            String? Old = prefs.getString("tasks");
-           List<dynamic>Tasks=[];
+           List<dynamic>taskslist=[];
            if(Old!=null&&Old.isNotEmpty)
              {
              final Decoded= jsonDecode(Old);
-             Tasks=Decoded;
+             taskslist=Decoded;
              }
-
-       Map<String, dynamic> newTask = {
-       "name": taskcontroller.text,
-       "desc": descriptionController.text,
-       };
-       Tasks.add(newTask);
-
-       await prefs.setString("tasks", jsonEncode(Tasks));
-
-       print(Tasks);
+           Map<String, dynamic> newTask = model.toMap();
+       taskslist.add(newTask);
+       await prefs.setString("tasks", jsonEncode(taskslist));
+       print(taskslist);
+         Navigator.pop(context);
      }},
          style: ElevatedButton.styleFrom(
            backgroundColor: Color(0xff15B86C),
